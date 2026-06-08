@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <!--
   Chem Workbook — Calorimeter Investigation
-  Version: 1.15
+  Version: 1.16
   Last updated: see commit metadata.
   Version log:
     1.0  First build (initial 11-section write-up, 7 tabs, demo data, save/load)
@@ -143,12 +143,19 @@
          WHILE the graph tab is visible (cached just before the tab is
          restored) instead of after it is hidden, which previously yielded
          blank/0-size images in the exported Word document.
+    1.16 Max/min trendline graphs now print all three line equations in the
+         caption (best fit + maximum-gradient + minimum-gradient lines), each
+         sign-aware (no "+ -0.04"). The max/min bound lines are recoloured grey
+         to match their grey equation labels, so the three lines and their
+         three equations read together at a glance; best fit stays in the
+         series colour with R². The gradient ± uncertainty line is kept beneath.
+         Applies to every linear graph that supports the Max/Min toggle.
 -->
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-<title>Chem Workbook v1.15 — Calorimeter Investigation</title>
+<title>Chem Workbook v1.16 — Calorimeter Investigation</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
 // ── WRITE-UP NAV ──
@@ -600,7 +607,7 @@ body{font-family:'Source Serif 4',Georgia,serif;background:var(--bg);color:var(-
   <div class="login-box">
     <div class="login-logo">🔥</div>
     <div class="login-title">Chem Workbook</div>
-    <div style="font-size:.7rem;color:#a8a098;margin-bottom:24px;font-family:'JetBrains Mono',monospace;letter-spacing:.05em;">v1.15</div>
+    <div style="font-size:.7rem;color:#a8a098;margin-bottom:24px;font-family:'JetBrains Mono',monospace;letter-spacing:.05em;">v1.16</div>
     <input type="text" id="loginUser" placeholder="Username" autocomplete="off" onkeydown="if(event.key==='Enter')document.getElementById('loginPw').focus()">
     <input type="password" id="loginPw" placeholder="Password" onkeydown="if(event.key==='Enter')doLogin()">
     <button class="login-btn" onclick="doLogin()">Unlock</button>
@@ -614,7 +621,7 @@ body{font-family:'Source Serif 4',Georgia,serif;background:var(--bg);color:var(-
 <!-- ── TOPBAR ── -->
 <div class="topbar">
   <h1>🔥 Calorimeter Investigation</h1>
-  <span style="font-size:10px;color:#7f95ac;font-family:'JetBrains Mono',monospace;letter-spacing:.05em;background:rgba(255,255,255,.06);padding:2px 6px;border-radius:3px;">v1.15</span>
+  <span style="font-size:10px;color:#7f95ac;font-family:'JetBrains Mono',monospace;letter-spacing:.05em;background:rgba(255,255,255,.06);padding:2px 6px;border-radius:3px;">v1.16</span>
   <span class="sub">Year 11 Unit 1 · Heat of Solution</span>
   <div class="badges">
     <span class="badge b-teal" id="saltBadge">NH₄Cl</span>
@@ -3310,6 +3317,7 @@ function trendLine(pts,col,lbl){
   return{label:lbl,data:[{x:mn-pad,y:r.m*(mn-pad)+r.b},{x:mx+pad,y:r.m*(mx+pad)+r.b}],borderColor:col,borderWidth:1.5,borderDash:[7,4],pointRadius:0,showLine:true,type:'scatter',reg:r};
 }
 
+const COL_MM='#6b7280';   // grey for the max/min uncertainty-bound lines (matches their equation labels)
 function maxMinLines(pts,aus,col){
   if(pts.length<2||!aus||aus.length!==pts.length)return null;
   const sorted=pts.map((p,i)=>({x:p.x,y:p.y,au:aus[i]||0})).sort((a,b)=>a.x-b.x);
@@ -3321,8 +3329,23 @@ function maxMinLines(pts,aus,col){
   const mMin=(last.y-last.au-(first.y+first.au))/(last.x-first.x);
   const bMin=(first.y+first.au)-mMin*first.x;
   const gradUnc=Math.abs(mMax-mMin)/2;
-  const mkLine=(m,b,lbl)=>({label:lbl,data:[{x:mn-pad,y:m*(mn-pad)+b},{x:mx+pad,y:m*(mx+pad)+b}],borderColor:col,borderWidth:1,borderDash:[3,3],pointRadius:0,showLine:true,type:'scatter',borderCapStyle:'butt',reg:{m,b,r2:null}});
+  const mkLine=(m,b,lbl)=>({label:lbl,data:[{x:mn-pad,y:m*(mn-pad)+b},{x:mx+pad,y:m*(mx+pad)+b}],borderColor:COL_MM,borderWidth:1.2,borderDash:[4,3],pointRadius:0,showLine:true,type:'scatter',borderCapStyle:'butt',reg:{m,b,r2:null}});
   return{maxLine:mkLine(mMax,bMax,'Max gradient'),minLine:mkLine(mMin,bMin,'Min gradient'),mMax,mMin,gradUnc};
+}
+// Format one "y = mx + c" line; sign-aware so the intercept never reads "+ −0.04".
+function eqLineStr(label,m,b,col,dp,r2){
+  const sign=b>=0?'+':'−';
+  const r2s=(r2!=null&&isFinite(r2))?`&nbsp;&nbsp;R² = ${ff(r2,4)}`:'';
+  return `<span style="color:${col};font-weight:600;">${label}:</span> y = ${ff(m,dp)}x ${sign} ${ff(Math.abs(b),dp)}${r2s}`;
+}
+// Best-fit (in the series colour) plus, when shown, the max & min bound equations (grey, matching the lines).
+function eqTriple(fit,mm,dp,col){
+  let h=eqLineStr('Best fit',fit.reg.m,fit.reg.b,col,dp,fit.reg.r2);
+  if(mm){
+    h+='<br>'+eqLineStr('Max gradient',mm.maxLine.reg.m,mm.maxLine.reg.b,COL_MM,dp,null);
+    h+='<br>'+eqLineStr('Min gradient',mm.minLine.reg.m,mm.minLine.reg.b,COL_MM,dp,null);
+  }
+  return h;
 }
 
 // Error-bar plugin
@@ -3436,8 +3459,10 @@ function renderAllGraphs(opts){
     const aus=stats.map(x=>x.st.auDT);
     const ds=[{label:'Mean ΔT (°C)',data:pts,backgroundColor:GCOLS.dT+'cc',borderColor:GCOLS.dT,pointRadius:5,showLine:false,_eb:aus}];
     const fit=trendLine(pts,GCOLS.dT,'Best fit');if(fit)ds.push(fit);
-    let eq=fit?`y = ${ff(fit.reg.m,4)}x + ${ff(fit.reg.b,3)}  |  R² = ${ff(fit.reg.r2,4)}`:'';
-    if(S.showMaxMin&&pts.length>=2){const mm=maxMinLines(pts,aus,GCOLS.dT);if(mm){ds.push(mm.maxLine,mm.minLine);eq+=`<br>gradient = ${ff(fit.reg.m,4)} ± ${ff(mm.gradUnc,4)} °C/${ivU}`;}}
+    const mm=(S.showMaxMin&&pts.length>=2)?maxMinLines(pts,aus,GCOLS.dT):null;
+    if(mm)ds.push(mm.maxLine,mm.minLine);
+    let eq=fit?eqTriple(fit,mm,4,GCOLS.dT):'';
+    if(fit&&mm)eq+=`<br><span style="font-weight:600;">gradient = ${ff(fit.reg.m,4)} ± ${ff(mm.gradUnc,4)} °C/${ivU}</span>`;
     gMk(P+'1',{type:'scatter',data:{datasets:ds},options:mkScatterOpts(`${ivL} (${ivU})`,'Mean ΔT (°C)')});
     _gset(P+'1eq','innerHTML',eq);
   }
@@ -3449,8 +3474,10 @@ function renderAllGraphs(opts){
     const aus=stats.map(x=>x.st.auDT);
     const ds=[{label:'ΔT vs 1/V',data:pts,backgroundColor:GCOLS.dT+'cc',borderColor:GCOLS.dT,pointRadius:5,showLine:false,_eb:aus}];
     const fit=trendLine(pts,GCOLS.dT,'Best fit');if(fit)ds.push(fit);
-    let eq=fit?`y = ${ff(fit.reg.m,2)}x + ${ff(fit.reg.b,3)}  |  R² = ${ff(fit.reg.r2,4)}<br>gradient ≈ −Q/(m_salt·c) at constant Q`:'';
-    if(S.showMaxMin&&pts.length>=2){const mm=maxMinLines(pts,aus,GCOLS.dT);if(mm){ds.push(mm.maxLine,mm.minLine);eq+=`<br>gradient = ${ff(fit.reg.m,2)} ± ${ff(mm.gradUnc,2)} °C·mL`;}}
+    const mm=(S.showMaxMin&&pts.length>=2)?maxMinLines(pts,aus,GCOLS.dT):null;
+    if(mm)ds.push(mm.maxLine,mm.minLine);
+    let eq='';
+    if(fit){eq=eqTriple(fit,mm,2,GCOLS.dT);eq+= mm?`<br><span style="font-weight:600;">gradient = ${ff(fit.reg.m,2)} ± ${ff(mm.gradUnc,2)} °C·mL</span>`:`<br><span style="color:var(--muted);">gradient ≈ −Q/(m_salt·c) at constant Q</span>`;}
     gMk(P+'2',{type:'scatter',data:{datasets:ds},options:mkScatterOpts('1/V (mL⁻¹)','ΔT (°C)')});
     _gset(P+'2eq','innerHTML',eq);
   } else if(S.iv==='mass'){
@@ -3459,8 +3486,10 @@ function renderAllGraphs(opts){
     const aus=stats.map(x=>x.st.auDT);
     const ds=[{label:'ΔT vs m',data:pts,backgroundColor:GCOLS.dT+'cc',borderColor:GCOLS.dT,pointRadius:5,showLine:false,_eb:aus}];
     const fit=trendLine(pts,GCOLS.dT,'Best fit');if(fit)ds.push(fit);
-    let eq=fit?`y = ${ff(fit.reg.m,4)}x + ${ff(fit.reg.b,3)}  |  R² = ${ff(fit.reg.r2,4)}<br>theoretical gradient = ΔH/(M·m_water·c) = ${ff(SALT_DATA[S.salt].dH*1000/(SALT_DATA[S.salt].M*S.gVol*RHO_WATER*C_WATER)*(-1),4)} °C/g`:'';
-    if(S.showMaxMin&&pts.length>=2){const mm=maxMinLines(pts,aus,GCOLS.dT);if(mm){ds.push(mm.maxLine,mm.minLine);eq+=`<br>gradient = ${ff(fit.reg.m,4)} ± ${ff(mm.gradUnc,4)} °C/g`;}}
+    const mm=(S.showMaxMin&&pts.length>=2)?maxMinLines(pts,aus,GCOLS.dT):null;
+    if(mm)ds.push(mm.maxLine,mm.minLine);
+    let eq='';
+    if(fit){eq=eqTriple(fit,mm,4,GCOLS.dT);eq+=`<br><span style="color:var(--muted);">theoretical gradient = ΔH/(M·m_water·c) = ${ff(SALT_DATA[S.salt].dH*1000/(SALT_DATA[S.salt].M*S.gVol*RHO_WATER*C_WATER)*(-1),4)} °C/g</span>`;if(mm)eq+=`<br><span style="font-weight:600;">gradient = ${ff(fit.reg.m,4)} ± ${ff(mm.gradUnc,4)} °C/g</span>`;}
     gMk(P+'2',{type:'scatter',data:{datasets:ds},options:mkScatterOpts('Mass of salt (g)','ΔT (°C)')});
     _gset(P+'2eq','innerHTML',eq);
   } else {
@@ -3494,8 +3523,10 @@ function renderAllGraphs(opts){
     const xs=pts.map(p=>p.x),mn=Math.min(...xs),mx=Math.max(...xs);
     const litVal=SALT_DATA[S.salt].dH;
     ds.push({label:`Literature ΔH = ${litVal} kJ/mol`,data:[{x:mn,y:litVal},{x:mx,y:litVal}],borderColor:GCOLS.lit,borderDash:[5,3],borderWidth:1.5,pointRadius:0,showLine:true});
-    let eq=fit?`y = ${ff(fit.reg.m,5)}x + ${ff(fit.reg.b,2)}  |  R² = ${ff(fit.reg.r2,4)}<br>Error bars = propagated absolute U on ΔH. If hypothesis holds, gradient ≈ 0`:'';
-    if(S.showMaxMin&&pts.length>=2){const mm=maxMinLines(pts,aus,GCOLS.dH);if(mm){ds.push(mm.maxLine,mm.minLine);const inclZero=(mm.mMax>=0&&mm.mMin<=0)||(mm.mMax<=0&&mm.mMin>=0);eq+=`<br>gradient = ${ff(fit.reg.m,5)} ± ${ff(mm.gradUnc,5)} kJ/mol/${ivU} ${inclZero?'(zero IS in range — supports constancy)':'(zero NOT in range — IV dependence detected)'}`;}}
+    const mm=(S.showMaxMin&&pts.length>=2)?maxMinLines(pts,aus,GCOLS.dH):null;
+    if(mm)ds.push(mm.maxLine,mm.minLine);
+    let eq='';
+    if(fit){eq=eqTriple(fit,mm,5,GCOLS.dH);eq+=`<br><span style="color:var(--muted);">Error bars = propagated absolute U on ΔH. If hypothesis holds, gradient ≈ 0</span>`;if(mm){const inclZero=(mm.mMax>=0&&mm.mMin<=0)||(mm.mMax<=0&&mm.mMin>=0);eq+=`<br><span style="font-weight:600;">gradient = ${ff(fit.reg.m,5)} ± ${ff(mm.gradUnc,5)} kJ/mol/${ivU}</span> <span style="color:var(--muted);">${inclZero?'(zero IS in range — supports constancy)':'(zero NOT in range — IV dependence detected)'}</span>`;}}
     gMk(P+'3',{type:'scatter',data:{datasets:ds},options:mkScatterOpts(`${ivL} (${ivU})`,'ΔH (kJ/mol)')});
     _gset(P+'3eq','innerHTML',eq);
   }

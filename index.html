@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <!--
   Chem Workbook — Calorimeter Investigation
-  Version: 1.14
+  Version: 1.15
   Last updated: see commit metadata.
   Version log:
     1.0  First build (initial 11-section write-up, 7 tabs, demo data, save/load)
@@ -131,12 +131,24 @@
          the processed-data table (n=3 — AU and PU% are the QCAA-standard
          precision measures); the calculation walkthrough still demonstrates
          SD/SE as an optional concept step.
+    1.15 Evaluation section rebuilt on the planning-card model (matching Risk):
+         removed the full-sentence starter chips. It now uses guiding prompts,
+         a short vocabulary list for the validity paragraph, and a "plan your
+         errors & fixes" block of cards (name -> example from your data ->
+         systematic/random -> realistic fix -> effect on reliability/validity)
+         that feed the limitations and improvements paragraphs students write
+         themselves. Bond-enthalpy syllabus link and extension kept as prompts
+         with a weak/strong example; "+ Add another error" reveals a third
+         planning card. Graph export hardened: selected graphs are now captured
+         WHILE the graph tab is visible (cached just before the tab is
+         restored) instead of after it is hidden, which previously yielded
+         blank/0-size images in the exported Word document.
 -->
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-<title>Chem Workbook v1.14 — Calorimeter Investigation</title>
+<title>Chem Workbook v1.15 — Calorimeter Investigation</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
 // ── WRITE-UP NAV ──
@@ -588,7 +600,7 @@ body{font-family:'Source Serif 4',Georgia,serif;background:var(--bg);color:var(-
   <div class="login-box">
     <div class="login-logo">🔥</div>
     <div class="login-title">Chem Workbook</div>
-    <div style="font-size:.7rem;color:#a8a098;margin-bottom:24px;font-family:'JetBrains Mono',monospace;letter-spacing:.05em;">v1.14</div>
+    <div style="font-size:.7rem;color:#a8a098;margin-bottom:24px;font-family:'JetBrains Mono',monospace;letter-spacing:.05em;">v1.15</div>
     <input type="text" id="loginUser" placeholder="Username" autocomplete="off" onkeydown="if(event.key==='Enter')document.getElementById('loginPw').focus()">
     <input type="password" id="loginPw" placeholder="Password" onkeydown="if(event.key==='Enter')doLogin()">
     <button class="login-btn" onclick="doLogin()">Unlock</button>
@@ -602,7 +614,7 @@ body{font-family:'Source Serif 4',Georgia,serif;background:var(--bg);color:var(-
 <!-- ── TOPBAR ── -->
 <div class="topbar">
   <h1>🔥 Calorimeter Investigation</h1>
-  <span style="font-size:10px;color:#7f95ac;font-family:'JetBrains Mono',monospace;letter-spacing:.05em;background:rgba(255,255,255,.06);padding:2px 6px;border-radius:3px;">v1.14</span>
+  <span style="font-size:10px;color:#7f95ac;font-family:'JetBrains Mono',monospace;letter-spacing:.05em;background:rgba(255,255,255,.06);padding:2px 6px;border-radius:3px;">v1.15</span>
   <span class="sub">Year 11 Unit 1 · Heat of Solution</span>
   <div class="badges">
     <span class="badge b-teal" id="saltBadge">NH₄Cl</span>
@@ -2240,79 +2252,114 @@ body{font-family:'Source Serif 4',Georgia,serif;background:var(--bg);color:var(-
       <span class="wu-tog">▾</span>
     </div>
     <div class="wu-scaffold">
-      <div class="wu-prompt">Quote your AU and PU(%) values. Discuss what level of reliability they imply. Are PU% values mostly under 10%?</div>
-      <div class="starter-chips">
-        <span class="chip" onclick="insertChip(this,'ev-s1')">The reliability of the investigation can be assessed from the percentage uncertainty (PU%) within each IV level. PU(ΔH) ranged from ±___% to ±___%, with [most / some / few] levels showing PU% below 10%. This indicates [high / moderate / low] reliability overall.</span>
-        <span class="chip" onclick="insertChip(this,'ev-s1')">Reliability was strongest at [level], where PU% = ±___% — indicating that repeated trials at this level produced highly consistent results. Reliability was weakest at [level], where PU% = ±___%, indicating greater random scatter.</span>
-        <span class="chip" onclick="insertChip(this,'ev-s1')">The R² value of ___ for [Graph reference] further supports the conclusion of [strong / moderate / weak] reliability, as a high R² indicates that data points cluster closely around the trend line.</span>
-        <span class="chip" onclick="insertChip(this,'ev-s1')">Standard deviation ranged from ___ to ___ kJ/mol across levels, and the standard error of the mean from ___ to ___ kJ/mol. The [low / moderate] standard deviation indicates [consistent / variable] trials, while the small standard error shows the calculated mean ΔH is a [reliable / less reliable] estimate of the true value at each level.</span>
-      </div>
+      <div class="wu-prompt">Use your AU and PU(%) as the evidence. Are most PU% under 10%? Say where precision was best and worst, and name the <strong>random</strong> effects behind the scatter (stirring rate, exactly when you read the final temperature, parallax on the thermometer). Judge the <em>level</em> of reliability — do not just restate the numbers.</div>
     </div>
     <div class="wu-wcard-write">
-      <textarea class="write-area" id="ev-s1" rows="4" placeholder="Discuss reliability with reference to AU and PU(%) values…" oninput="countWords(this,'evc-s1')"></textarea>
+      <textarea class="write-area" id="ev-s1" rows="4" placeholder="Judge reliability using your AU and PU(%) values and the random errors behind them…" oninput="countWords(this,'evc-s1')"></textarea>
     </div>
   </div>
 
   <div class="wu-wcard open" id="wuwc-ev2">
     <div class="wu-wcard-head" onclick="wuToggle('wuwc-ev2')">
       <span class="wu-stepnum">2</span>
-      <span class="wu-steptitle">Validity — how accurate were your results?</span>
+      <span class="wu-steptitle">Validity — how accurate, and which way is it biased?</span>
       <span class="wu-wcbadge" id="evc-s2">0 words</span>
       <span class="wu-tog">▾</span>
     </div>
     <div class="wu-scaffold">
-      <div class="wu-prompt">Quote your % error values across IV levels. Was experimental ΔH systematically above or below the literature value? Discuss what this implies about validity.</div>
-      <div class="starter-chips">
-        <span class="chip" onclick="insertChip(this,'ev-s2')">The validity of the investigation can be assessed from the percentage error of experimental ΔH against the literature value of ___ kJ/mol. Percentage error ranged from ___% at [level] to ___% at [level], indicating [generally good / variable / poor] accuracy.</span>
-        <span class="chip" onclick="insertChip(this,'ev-s2')">The experimental ΔH values were systematically [smaller / larger] in magnitude than the literature value across [all / most] levels. This consistent direction of bias indicates the presence of one or more systematic errors, rather than random scatter.</span>
-        <span class="chip" onclick="insertChip(this,'ev-s2')">At [level], the % error of ___% was [comparable to / smaller than / larger than] the propagated %U of ±___%, meaning the experimental and literature values [agree / disagree] within measurement uncertainty at this level.</span>
+      <div class="wu-prompt">Use % error against the literature value as the evidence. State the <strong>direction</strong> of the bias (did your |ΔH| come out too high or too low?) and name the <strong>systematic</strong> cause. Remember you can be reliable but invalid — consistent yet wrong.</div>
+      <div class="vocab-list" style="margin:.55rem 0 .2rem;">
+        <span class="vw" onclick="insertVocab(this,'ev-s2')">heat loss to surroundings</span>
+        <span class="vw" onclick="insertVocab(this,'ev-s2')">calorimeter thermal mass</span>
+        <span class="vw" onclick="insertVocab(this,'ev-s2')">incomplete dissolution</span>
+        <span class="vw" onclick="insertVocab(this,'ev-s2')">thermometer precision at small ΔT</span>
+        <span class="vw" onclick="insertVocab(this,'ev-s2')">systematic underestimate</span>
       </div>
     </div>
     <div class="wu-wcard-write">
-      <textarea class="write-area" id="ev-s2" rows="4" placeholder="Discuss validity with reference to % error and propagated %U…" oninput="countWords(this,'evc-s2')"></textarea>
+      <textarea class="write-area" id="ev-s2" rows="4" placeholder="Judge validity using % error; name the systematic error and its direction of bias…" oninput="countWords(this,'evc-s2')"></textarea>
     </div>
   </div>
+
+  <div class="wu-wcard open" id="wuwc-evPlan">
+    <div class="wu-wcard-head" onclick="wuToggle('wuwc-evPlan')">
+      <span class="wu-stepnum">✎</span>
+      <span class="wu-steptitle">Plan your errors &amp; fixes first (notes — not for the report)</span>
+      <span class="wu-tog">▾</span>
+    </div>
+    <div class="wu-scaffold">
+      <div class="wu-prompt"><strong>Do this before writing 3 and 4 — </strong>one row per error. Name it → a specific example from <em>your</em> data → systematic or random → a realistic fix → its effect on reliability/validity. Then turn these notes into the paragraphs below.</div>
+    <div class="risk-haz">
+      <div class="risk-haz-hd">Error 1</div>
+      <div class="qa-block"><div class="qa-q">Error — name it:</div>
+        <textarea class="qa-a" id="evp1-name" rows="1" placeholder="e.g. heat loss to the surroundings" oninput="markDirty()"></textarea></div>
+      <div class="qa-block"><div class="qa-q">Specific example from YOUR data:</div>
+        <textarea class="qa-a" id="evp1-eg" rows="2" placeholder="e.g. mean ΔH sat about 7% below the literature value at every volume" oninput="markDirty()"></textarea></div>
+      <div class="qa-block"><div class="qa-q">Systematic or random? Why:</div>
+        <textarea class="qa-a" id="evp1-type" rows="1" placeholder="e.g. systematic — it biases every trial the same way" oninput="markDirty()"></textarea></div>
+      <div class="qa-block"><div class="qa-q">Specific fix (achievable in a school lab):</div>
+        <textarea class="qa-a" id="evp1-fix" rows="2" placeholder="e.g. add a polystyrene foam lid with cut-outs for the probe and stirrer" oninput="markDirty()"></textarea></div>
+      <div class="qa-block"><div class="qa-q">Effect on reliability or validity:</div>
+        <textarea class="qa-a" id="evp1-effect" rows="1" placeholder="e.g. improves validity — reduces the consistent underestimate of |ΔH|" oninput="markDirty()"></textarea></div>
+    </div>
+    <div class="risk-haz">
+      <div class="risk-haz-hd">Error 2</div>
+      <div class="qa-block"><div class="qa-q">Error — name it:</div>
+        <textarea class="qa-a" id="evp2-name" rows="1" placeholder="e.g. heat loss to the surroundings" oninput="markDirty()"></textarea></div>
+      <div class="qa-block"><div class="qa-q">Specific example from YOUR data:</div>
+        <textarea class="qa-a" id="evp2-eg" rows="2" placeholder="e.g. the calorimeter (can + lid) also changed temperature but was left out of Q = mcΔT" oninput="markDirty()"></textarea></div>
+      <div class="qa-block"><div class="qa-q">Systematic or random? Why:</div>
+        <textarea class="qa-a" id="evp2-type" rows="1" placeholder="e.g. systematic — it biases every trial the same way" oninput="markDirty()"></textarea></div>
+      <div class="qa-block"><div class="qa-q">Specific fix (achievable in a school lab):</div>
+        <textarea class="qa-a" id="evp2-fix" rows="2" placeholder="e.g. add a polystyrene foam lid with cut-outs for the probe and stirrer" oninput="markDirty()"></textarea></div>
+      <div class="qa-block"><div class="qa-q">Effect on reliability or validity:</div>
+        <textarea class="qa-a" id="evp2-effect" rows="1" placeholder="e.g. improves validity — reduces the consistent underestimate of |ΔH|" oninput="markDirty()"></textarea></div>
+    </div>
+      <button class="btn" type="button" onclick="revealEvPlan()" style="margin:.5rem 0 .2rem;">+ Add another error</button>
+      <div class="note" style="font-size:.82rem;background:#eef4f2;border-left:3px solid var(--teal);padding:8px 12px;border-radius:var(--r);margin-top:.6rem;">Keep fixes realistic for an insulated cup calorimeter: a foam lid; a hot/cold-water calibration to find the calorimeter heat capacity; faster temperature logging with back-extrapolation to the moment of mixing; powdering and stirring the salt. Not "use a bomb calorimeter".</div>
+    </div>
+  </div>
+    <div class="risk-haz" id="evp3card" style="display:none;">
+      <div class="risk-haz-hd">Error 3 (optional)</div>
+      <div class="qa-block"><div class="qa-q">Error — name it:</div>
+        <textarea class="qa-a" id="evp3-name" rows="1" placeholder="e.g. heat loss to the surroundings" oninput="markDirty()"></textarea></div>
+      <div class="qa-block"><div class="qa-q">Specific example from YOUR data:</div>
+        <textarea class="qa-a" id="evp3-eg" rows="2" placeholder="Describe the error using your own data." oninput="markDirty()"></textarea></div>
+      <div class="qa-block"><div class="qa-q">Systematic or random? Why:</div>
+        <textarea class="qa-a" id="evp3-type" rows="1" placeholder="e.g. systematic — it biases every trial the same way" oninput="markDirty()"></textarea></div>
+      <div class="qa-block"><div class="qa-q">Specific fix (achievable in a school lab):</div>
+        <textarea class="qa-a" id="evp3-fix" rows="2" placeholder="e.g. add a polystyrene foam lid with cut-outs for the probe and stirrer" oninput="markDirty()"></textarea></div>
+      <div class="qa-block"><div class="qa-q">Effect on reliability or validity:</div>
+        <textarea class="qa-a" id="evp3-effect" rows="1" placeholder="e.g. improves validity — reduces the consistent underestimate of |ΔH|" oninput="markDirty()"></textarea></div>
+    </div>
 
   <div class="wu-wcard open" id="wuwc-ev3">
     <div class="wu-wcard-head" onclick="wuToggle('wuwc-ev3')">
       <span class="wu-stepnum">3</span>
-      <span class="wu-steptitle">Named systematic errors with direction of bias</span>
+      <span class="wu-steptitle">Limitations — your paragraph</span>
       <span class="wu-wcbadge" id="evc-s3">0 words</span>
       <span class="wu-tog">▾</span>
     </div>
     <div class="wu-scaffold">
-      <div class="wu-prompt">Identify the major systematic errors specific to this apparatus, classify each, state the direction of bias, and explain how it produced the observed discrepancy.</div>
-      <div class="starter-chips">
-        <span class="chip" onclick="insertChip(this,'ev-s3')">Heat exchange with the surroundings (systematic) — despite the polystyrene insulation, the open top of the calorimeter allowed heat to flow between the water and the laboratory. For endothermic dissolutions, warmth from the room leaked back into the water, reducing |ΔT| and biasing |ΔH| below its true value. This is consistent with the systematic underestimation observed across all levels.</span>
-        <span class="chip" onclick="insertChip(this,'ev-s3')">Calorimeter thermal mass (systematic) — the aluminium can itself cooled (for endothermic processes) along with the water, but this heat was not included in Q = mcΔT (which uses only water's mass and specific heat). With c_Cu ≈ 0.385 J g⁻¹ °C⁻¹ and m_Cu ≈ 80 g, the aluminium accounts for ~7% of total system heat capacity, leading to a systematic ~7% underestimate of |Q| and therefore |ΔH|.</span>
-        <span class="chip" onclick="insertChip(this,'ev-s3')">Thermometer precision (random and systematic at small ΔT) — at small ΔT, the ±0.1 °C uncertainty becomes a significant fraction of the reading. For ΔT = 0.5 °C, the relative uncertainty is 40%, dominating all other contributions to the propagated %U(ΔH).</span>
-        <span class="chip" onclick="insertChip(this,'ev-s3')">Incomplete dissolution (systematic) — visible undissolved salt at [level] indicates that not all of the weighed mass had dissolved by the time the final temperature was recorded. This biases the apparent ΔH per mole below its true value.</span>
-      </div>
+      <div class="wu-prompt">Turn your planning notes into a short paragraph: name each main limitation, classify it (systematic/random), and link it to the effect you actually saw in your data.</div>
     </div>
     <div class="wu-wcard-write">
-      <textarea class="write-area" id="ev-s3" rows="5" placeholder="Identify named systematic errors with their direction of bias…" oninput="countWords(this,'evc-s3')"></textarea>
+      <textarea class="write-area" id="ev-s3" rows="4" placeholder="Write your limitations paragraph from the planning notes above…" oninput="countWords(this,'evc-s3')"></textarea>
     </div>
   </div>
 
   <div class="wu-wcard open" id="wuwc-ev4">
     <div class="wu-wcard-head" onclick="wuToggle('wuwc-ev4')">
       <span class="wu-stepnum">4</span>
-      <span class="wu-steptitle">Specific, realistic improvements</span>
+      <span class="wu-steptitle">Improvements — your paragraph</span>
       <span class="wu-wcbadge" id="evc-s4">0 words</span>
       <span class="wu-tog">▾</span>
     </div>
     <div class="wu-scaffold">
-      <div class="wu-prompt">For each major error identified, propose a specific improvement. Each improvement must be achievable with realistic school-laboratory resources — not "buy a bomb calorimeter".</div>
-      <div class="starter-chips">
-        <span class="chip" onclick="insertChip(this,'ev-s4')">To reduce heat transfer through the lid, a layer of polystyrene foam could be placed over the existing transparent plastic lid. The plastic lid was designed for visibility, not insulation, and conducts heat noticeably better than polystyrene. Adding a foam cap (with cut-outs for the probe and stirrer) would address both the lid material and the port gaps in a single modification, at the cost of losing visibility into the calorimeter.</span>
-        <span class="chip" onclick="insertChip(this,'ev-s4')">To correct for calorimeter thermal mass (the small amount of heat absorbed by the styrofoam liner), a calibration experiment should be performed: mix known masses of hot and cold water in the calorimeter, measure the equilibrium temperature, and apply conservation of energy to determine the calorimeter heat capacity C_cal. This C_cal can then be added to m_water × c_water in subsequent ΔH calculations.</span>
-        <span class="chip" onclick="insertChip(this,'ev-s4')">To further reduce thermometer uncertainty at small ΔT, the Vernier probe could be logged at a higher rate (10 Hz instead of 1 Hz) and a curve fit applied to the temperature trace to extract the exact extremum, rather than relying on stable-reading visual identification.</span>
-        <span class="chip" onclick="insertChip(this,'ev-s4')">To ensure complete dissolution, the salt should be finely powdered before weighing, added all at once through a lid port, and stirred continuously with a standardised stirring rate; the measurement window should be extended until the Vernier probe trace clearly plateaus.</span>
-        <span class="chip" onclick="insertChip(this,'ev-s4')">To enable extrapolation back to t = 0 (the moment of salt addition), the Vernier probe trace could be analysed by fitting a linear cooling/warming curve to the post-dissolution drift and back-extrapolating to the salt-addition timestamp. This corrects for heat exchange that occurred during the dissolution itself.</span>
-      </div>
+      <div class="wu-prompt">For each main error, give one specific, realistic improvement and say what it would fix. Chain it: error → why it biases the result → the fix → its effect on reliability or validity.</div>
     </div>
     <div class="wu-wcard-write">
-      <textarea class="write-area" id="ev-s4" rows="5" placeholder="Propose specific, realistic improvements…" oninput="countWords(this,'evc-s4')"></textarea>
+      <textarea class="write-area" id="ev-s4" rows="5" placeholder="Write your improvements paragraph (specific and achievable in a school lab)…" oninput="countWords(this,'evc-s4')"></textarea>
     </div>
   </div>
 
@@ -2324,35 +2371,29 @@ body{font-family:'Source Serif 4',Georgia,serif;background:var(--bg);color:var(-
       <span class="wu-tog">▾</span>
     </div>
     <div class="wu-scaffold">
-      <div class="wu-prompt">The QCAA syllabus explicitly references the limitations of using average bond enthalpies. Discuss whether bond enthalpy concepts apply to this dissolution investigation.</div>
-      <div class="starter-chips">
-        <span class="chip" onclick="insertChip(this,'ev-s5')">Average bond enthalpy values are defined for covalent bonds in gas-phase species at standard conditions, and therefore cannot be directly applied to ionic dissolution in aqueous solution. The conceptual link is valid — breaking attractions absorbs energy, forming new ones releases it — but the numerical values cannot be substituted into a dissolution calculation.</span>
-        <span class="chip" onclick="insertChip(this,'ev-s5')">A more appropriate theoretical comparison uses tabulated lattice enthalpies and individual ion hydration enthalpies, which are specifically derived for ionic species: ΔH_solution = ΔH_lattice + ΣΔH_hydration. This treatment would allow direct verification of the experimental ΔH against a Hess's-law-style theoretical value.</span>
-        <span class="chip" onclick="insertChip(this,'ev-s5')">For NH₄Cl, the literature ΔH_solution of +14.78 kJ/mol can be reconstructed from ΔH_lattice ≈ +705 kJ/mol and ΔH_hydration(NH₄⁺) ≈ −307 kJ/mol plus ΔH_hydration(Cl⁻) ≈ −381 kJ/mol, giving +17 kJ/mol — close to the literature value but illustrating how multiple theoretical pathways converge on the experimental measurement.</span>
-      </div>
+      <div class="wu-prompt">The syllabus asks about the limits of average bond enthalpies. Briefly: do gas-phase covalent bond-enthalpy values apply to an <em>ionic dissolution in water</em>? Note what the right theoretical comparison would be instead (lattice + hydration enthalpies).</div>
     </div>
     <div class="wu-wcard-write">
-      <textarea class="write-area" id="ev-s5" rows="4" placeholder="Discuss limitations of bond enthalpy applied to this investigation…" oninput="countWords(this,'evc-s5')"></textarea>
+      <textarea class="write-area" id="ev-s5" rows="4" placeholder="Explain why average bond enthalpies do not directly apply here, and what does…" oninput="countWords(this,'evc-s5')"></textarea>
     </div>
   </div>
 
   <div class="wu-wcard open" id="wuwc-ev6">
     <div class="wu-wcard-head" onclick="wuToggle('wuwc-ev6')">
       <span class="wu-stepnum">6</span>
-      <span class="wu-steptitle">Extensions for future investigation</span>
+      <span class="wu-steptitle">Extension — a new testable question</span>
       <span class="wu-wcbadge" id="evc-s6">0 words</span>
       <span class="wu-tog">▾</span>
     </div>
     <div class="wu-scaffold">
-      <div class="wu-prompt">Suggest specific extensions that could form a new investigation, building on what was learned.</div>
-      <div class="starter-chips">
-        <span class="chip" onclick="insertChip(this,'ev-s6')">A natural extension would be to investigate how the initial water temperature affects calculated ΔH — testing whether ΔH varies with temperature (the syllabus expectation is that it varies slightly with temperature, allowing the temperature-dependence of ΔH to be examined directly).</span>
-        <span class="chip" onclick="insertChip(this,'ev-s6')">A comparative extension would test multiple salts at the same conditions and rank-order their ΔH values, then compare these rankings to predictions based on tabulated lattice and hydration enthalpies (a direct test of the lattice/hydration model of dissolution).</span>
-        <span class="chip" onclick="insertChip(this,'ev-s6')">A methodological extension would compare the insulated aluminium calorimeter to a coffee-cup (polystyrene-only) calorimeter and a vacuum-flask calorimeter, testing whether the apparatus choice produces systematically different ΔH values for the same dissolution.</span>
+      <div class="wu-prompt">Propose one genuinely new investigation that arises from a limitation above — not just "more levels".</div>
+      <div class="ba" style="margin:.5rem 0 .2rem;">
+        <div class="ba-b"><div class="ba-lbl">✗ Weak</div>"Repeat with more volumes" — that is just replication, not an extension.</div>
+        <div class="ba-a"><div class="ba-lbl">✓ Strong</div>A genuinely new, testable question that grows out of a limitation (e.g. does the calorimeter heat capacity, found by calibration, fully account for the systematic gap?).</div>
       </div>
     </div>
     <div class="wu-wcard-write">
-      <textarea class="write-area" id="ev-s6" rows="4" placeholder="Suggest extensions…" oninput="countWords(this,'evc-s6')"></textarea>
+      <textarea class="write-area" id="ev-s6" rows="4" placeholder="Suggest a specific extension that could form a new investigation…" oninput="countWords(this,'evc-s6')"></textarea>
     </div>
   </div>
 
@@ -3693,7 +3734,8 @@ function syncGraphSelUI(){
 }
 // Capture a graph canvas as a PNG data URL (white background, for Word).
 // Tries the selected-graph canvas (preferred), then the write-up canvas, then the Graphs-tab canvas.
-function captureGraphPNG(n){
+let GRAPH_PNG_CACHE={};
+function captureGraphRaw(n){
   // Preferred: render straight from the Chart.js instance — works even when the
   // canvas is in a hidden tab (the live-canvas drawImage path fails at 0×0 size).
   const ids=['selG'+n,'wuG'+n,'gC'+n];
@@ -3720,6 +3762,8 @@ function captureGraphPNG(n){
   };
   return tryCap(document.getElementById('selG'+n)) || tryCap(document.getElementById('wuG'+n)) || tryCap(document.getElementById('gC'+n));
 }
+// Export uses the cache populated (while visible) by ensureGraphsRendered, else captures live.
+function captureGraphPNG(n){ return (GRAPH_PNG_CACHE&&GRAPH_PNG_CACHE[n])||captureGraphRaw(n); }
 
 
 // ═══════════════════════════════════════════════════════════════
@@ -3798,6 +3842,8 @@ function getRiskHTML(){
 }
 function revealRisk(){for(let k=4;k<=5;k++){const c=document.getElementById('rh'+k);if(c&&c.style.display==='none'){c.style.display='';return;}}}
 function revealFilledRisks(){for(let k=4;k<=5;k++){const c=document.getElementById('rh'+k);if(!c)continue;const has=['-risk','-lvl','-mgmt'].some(s=>{const e=document.getElementById('rh'+k+s);return e&&e.value.trim();});if(has)c.style.display='';}}
+function revealEvPlan(){const c=document.getElementById('evp3card');if(c)c.style.display='';}
+function revealFilledEvPlan(){const c=document.getElementById('evp3card');if(!c)return;const has=['-name','-eg','-type','-fix','-effect'].some(s=>{const e=document.getElementById('evp3'+s);return e&&e.value.trim();});if(has)c.style.display='';}
 
 // ═══════════════════════════════════════════════════════════════
 // CSV IMPORT / EXPORT
@@ -3923,6 +3969,7 @@ function dlCalcWord(){
 // (preferred for capture) become visible and lay out reliably, then renders.
 function ensureGraphsRendered(){
   return new Promise(resolve=>{
+    GRAPH_PNG_CACHE={};
     if(S.levels.length===0){resolve();return;}
     const anyData=S.levels.some(lv=>levelStats(lv));
     if(!anyData){resolve();return;}
@@ -3935,12 +3982,16 @@ function ensureGraphsRendered(){
       renderAllGraphs(); // renders gC* + wuG* + selG* via the cascade
       // Force a second pass for selG since visibility may have just changed
       renderAllGraphs({pfx:'selG',emptyId:'__nope_e',gridId:'__nope_g'});
-      requestAnimationFrame(()=>{
-        // restore the tab/section the user was on
+      // Let charts finish drawing, then CAPTURE WHILE VISIBLE (capturing after the
+      // tab is hidden gives a 0-sized/blank canvas — the cause of bad graph exports).
+      setTimeout(()=>{
+        for(let n=1;n<=5;n++){
+          if(S.graphSel&&S.graphSel[n]){const png=captureGraphRaw(n);if(png&&png.length>2000)GRAPH_PNG_CACHE[n]=png;}
+        }
         switchTab(wasTab);
         if(wasTab==='write'&&typeof wuNav==='function')wuNav(wasWuSec);
         resolve();
-      });
+      },350);
     });
   });
 }
@@ -4134,6 +4185,7 @@ function applySaveData(d){
     for(const id in d.writeFields){const el=document.getElementById(id);if(el){el.value=d.writeFields[id];el.dispatchEvent(new Event('input'));}}
     try{collateAna();}catch(e){}
     try{revealFilledRisks();}catch(e){}
+    try{revealFilledEvPlan();}catch(e){}
   }
   if(d.checked){
     document.querySelectorAll('.ci').forEach(el=>{if(d.checked[el.textContent.trim()])el.classList.add('done');});
@@ -4329,4 +4381,3 @@ document.addEventListener('DOMContentLoaded',()=>{
 </script>
 </body>
 </html>
-
